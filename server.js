@@ -18,7 +18,13 @@ if(process.env.NODE_ENV === 'development') {
 
     app.use(morgan('dev'));
 
-}
+};
+
+// Load all routes
+const authRouter = require('./routes/auth.route');
+
+// Use Routes
+app.use('/api/', authRouter);
 
 const PORT = process.env.PORT;
 
