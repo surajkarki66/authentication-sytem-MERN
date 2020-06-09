@@ -7,7 +7,8 @@ const {
     registerController,
     activationController,
     signinController,
-    forgotPasswordController
+    forgotPasswordController,
+    resetPasswordController
 } = require('../controllers/auth.controller.js');
 
 router.post('/register', registerController);
@@ -17,5 +18,6 @@ router.post('/signin', signinController);
 
 // forgot reset password
 router.put('/forgotpassword', forgotPasswordController);
+router.put('/resetpassword', resetPasswordController);
 
 module.exports = router;
