@@ -13,6 +13,7 @@ const { errorHandler } = require("../helpers/dbErrorHandling");
 const nodemailer = require("nodemailer");
 
 exports.registerController = (req, res) => {
+  const transporter = require('../helpers/transporter');
   const { name, email, password } = req.body;
   const errors = validationResult(req);
 
@@ -36,7 +37,7 @@ exports.registerController = (req, res) => {
       {
         name,
         email,
-        password
+        password,
       },
       process.env.JWT_ACCOUNT_ACTIVATION,
       {
@@ -44,26 +45,6 @@ exports.registerController = (req, res) => {
       }
     );
 
-    // create reusable transporter object using the default SMTP transport
-    let transporter = nodemailer.createTransport({
-      host: "smtp.gmail.com",
-      port: 465,
-      secure: true,
-      service: 'gmail',
-      auth: {
-        user: process.env.EMAIL,
-        pass: process.env.PASS,
-      },
-    });
-
-    //Verifying the Nodemailer Transport instance
-    transporter.verify((error, success) => {
-      if (error) {
-        console.log(error);
-      } else {
-        console.log("Server is ready to take messages");
-      }
-    });
     let mailOptions = {
       from: `"SurajKarki" ${process.env.USER}`,
       to: email,
@@ -85,17 +66,15 @@ exports.registerController = (req, res) => {
           success: false,
           errors: errorHandler(error),
         });
-      }
-      else  {
+      } else {
         res.status(200).json({
           success: true,
           message: `Email has been sent to ${email}`,
-        })
+        });
       }
     });
   }
 };
-
 
 exports.activationController = (req, res) => {
   const { token } = req.body;
@@ -103,9 +82,9 @@ exports.activationController = (req, res) => {
   if (token) {
     jwt.verify(token, process.env.JWT_ACCOUNT_ACTIVATION, (err, decoded) => {
       if (err) {
-        console.log('Activation error');
+        console.log("Activation error");
         return res.status(401).json({
-          errors: 'Expired link. Signup again'
+          errors: "Expired link. Signup again",
         });
       } else {
         const { name, email, password } = jwt.decode(token);
@@ -114,20 +93,20 @@ exports.activationController = (req, res) => {
         const user = new User({
           name,
           email,
-          password
+          password,
         });
 
         user.save((err, user) => {
           if (err) {
-            console.log('Save error', errorHandler(err));
+            console.log("Save error", errorHandler(err));
             return res.status(401).json({
-              errors: errorHandler(err)
+              errors: errorHandler(err),
             });
           } else {
             return res.json({
               success: true,
               message: user,
-              message: 'Signup success'
+              message: "Signup success",
             });
           }
         });
@@ -135,7 +114,7 @@ exports.activationController = (req, res) => {
     });
   } else {
     return res.json({
-      message: 'error happening please try again'
+      message: "error happening please try again",
     });
   }
 };
@@ -144,34 +123,34 @@ exports.signinController = (req, res) => {
   const { email, password } = req.body;
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
-    const firstError = errors.array().map(error => error.msg)[0];
+    const firstError = errors.array().map((error) => error.msg)[0];
     return res.status(422).json({
-      errors: firstError
+      errors: firstError,
     });
   } else {
     // check if user exist
     User.findOne({
-      email
+      email,
     }).exec((err, user) => {
       if (err || !user) {
         return res.status(400).json({
-          errors: 'User with that email does not exist. Please signup'
+          errors: "User with that email does not exist. Please signup",
         });
       }
       // authenticate
       if (!user.authenticate(password)) {
         return res.status(400).json({
-          errors: 'Email and password do not match'
+          errors: "Email and password do not match",
         });
       }
       // generate a token and send to client
       const token = jwt.sign(
         {
-          _id: user._id
+          _id: user._id,
         },
         process.env.JWT_SECRET,
         {
-          expiresIn: '7d'
+          expiresIn: "7d",
         }
       );
       const { _id, name, email, role } = user;
@@ -182,11 +161,91 @@ exports.signinController = (req, res) => {
           _id,
           name,
           email,
-          role
-        }
+          role,
+        },
       });
     });
   }
 };
 
+exports.requireSignin = expressJwt({
+  secret: process.env.JWT_SECRET, // req.user._id
+});
 
+exports.forgotPasswordController = (req, res) => {
+  const transporter = require('../helpers/transporter');
+  const { email } = req.body;
+  const errors = validationResult(req);
+
+  if (!errors.isEmpty()) {
+    const firstError = errors.array().map((error) => error.msg)[0];
+    return res.status(422).json({
+      errors: firstError,
+    });
+  } else {
+    User.findOne(
+      {
+        email,
+      },
+      (err, user) => {
+        if (err || !user) {
+          return res.status(400).json({
+            error: "User with that email does not exist",
+          });
+        }
+
+        const token = jwt.sign(
+          {
+            _id: user._id,
+          },
+          process.env.JWT_RESET_PASSWORD,
+          {
+            expiresIn: "10m",
+          }
+        );
+
+        const mailOptions = {
+          from: process.env.USER,
+          to: email,
+          subject: `Password Reset link`,
+          html: `
+                    <h1>Please use the following link to reset your password</h1>
+                    <p>${process.env.CLIENT_URL}/users/password/reset/${token}</p>
+                    <hr />
+                    <p>This email may contain sensetive information</p>
+                    <p>${process.env.CLIENT_URL}</p>
+                `,
+        };
+
+        return user.updateOne(
+          {
+            resetPasswordLink: token,
+          },
+          (err, success) => {
+            if (err) {
+              console.log("RESET PASSWORD LINK ERROR", err);
+              return res.status(400).json({
+                error:
+                  "Database connection error on user password forgot request",
+              });
+            } else {
+              transporter.sendMail(mailOptions, (error, info) => {
+                if (error) {
+                  res.status(400).json({
+                    success: false,
+                    errors: errorHandler(error),
+                  });
+                } else {
+                  res.status(200).json({
+                    success: true,
+                    message: `Email has been sent to ${email}. Follow the instruction to activate your account`,
+                  });
+                }
+              });
+            }
+          }
+        );
+      }
+    );
+  }
+};
