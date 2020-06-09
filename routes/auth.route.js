@@ -5,10 +5,12 @@ const router = express.Router();
 // load controllers
 const {
     registerController,
-    activationController
+    activationController,
+    signinController
 } = require('../controllers/auth.controller.js');
 
 router.post('/register', registerController);
-router.post('/activation', activationController)
+router.post('/activation', activationController);
+router.post('/signin', signinController);
 
 module.exports = router;
