@@ -30,9 +30,12 @@ if (process.env.NODE_ENV === "development") {
 
 // Load all routes
 const authRouter = require("./routes/auth.route");
+const userRouter = require("./routes/user.route");
 
 // Use Routes
 app.use("/api/", authRouter);
+app.use("/api/", userRouter);
+
 
 const PORT = process.env.PORT;
 

@@ -26,13 +26,14 @@ exports.registerController = (req, res) => {
     User.findOne({
       email,
     }).exec((err, user) => {
+      // Checking the existence of the user.
       if (user) {
         return res.status(400).json({
           errors: "Email is taken",
         });
       }
     });
-
+    // Converting payload to jsonwebtoken.
     const token = jwt.sign(
       {
         name,
@@ -59,7 +60,7 @@ exports.registerController = (req, res) => {
   `,
     };
 
-    // send mail with defined transport object
+    // Sending email with defined transport object
     transporter.sendMail(mailOptions, (error, info) => {
       if (error) {
         res.status(400).json({
@@ -82,14 +83,12 @@ exports.activationController = (req, res) => {
   if (token) {
     jwt.verify(token, process.env.JWT_ACCOUNT_ACTIVATION, (err, decoded) => {
       if (err) {
-        console.log("Activation error");
         return res.status(401).json({
           errors: "Expired link. Signup again",
         });
       } else {
         const { name, email, password } = jwt.decode(token);
 
-        console.log(email);
         const user = new User({
           name,
           email,
@@ -98,14 +97,13 @@ exports.activationController = (req, res) => {
 
         user.save((err, user) => {
           if (err) {
-            console.log("Save error", errorHandler(err));
             return res.status(401).json({
               errors: errorHandler(err),
             });
           } else {
             return res.json({
               success: true,
-              message: user,
+              user: user,
               message: "Signup success",
             });
           }
@@ -128,7 +126,7 @@ exports.signinController = (req, res) => {
       errors: firstError,
     });
   } else {
-    // check if user exist
+    // Checking the existence of the user.
     User.findOne({
       email,
     }).exec((err, user) => {
@@ -137,13 +135,13 @@ exports.signinController = (req, res) => {
           errors: "User with that email does not exist. Please signup",
         });
       }
-      // authenticate
+      // Authenticate
       if (!user.authenticate(password)) {
         return res.status(400).json({
           errors: "Email and password do not match",
         });
       }
-      // generate a token and send to client
+      // Generate a token and send to client
       const token = jwt.sign(
         {
           _id: user._id,
