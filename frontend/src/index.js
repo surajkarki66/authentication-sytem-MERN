@@ -41,7 +41,7 @@ ReactDOM.render(
         render={(props) => <ResetPassword {...props} />}
       />
       <PrivateRoute path="/private" exact component={Private} />
-      <AdminRoute path="/path" exact component={Admin} />
+      <AdminRoute path="/admin" exact component={Admin} />
       <Redirect to="/" />
     </Switch>
   </BrowserRouter>,

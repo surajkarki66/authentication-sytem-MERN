@@ -371,12 +371,9 @@ exports.googleController = (req, res) => {
       }
     });
 };
-
 exports.facebookController = (req, res) => {
-  console.log("FACEBOOK LOGIN REQ BODY", req.body);
   const { userID, accessToken } = req.body;
-
-  const url = `https://graph.facebook.com/v2.11/${userID}/?fields=id,name,email&access_token=${accessToken}`;
+  const url = `https://graph.facebook.com/v7.0/${userID}/?fields=id,name,email&access_token=${accessToken}`;
 
   return (
     fetch(url, {

@@ -4,9 +4,14 @@ import { ToastContainer, toast } from "react-toastify";
 import axios from "axios";
 import { authenticate, isAuth } from "../helpers/auth";
 import { Link, Redirect } from "react-router-dom";
-import { GoogleLogin } from 'react-google-login';
+import { GoogleLogin } from "react-google-login";
+import FacebookLogin from "react-facebook-login/dist/facebook-login-render-props";
 
-const {API_URL, CLIENT_ID } = require("../configs/configs");
+const {
+  API_URL,
+  GOOGLE_CLIENT_ID,
+  FACEBOOK_CLIENT_ID,
+} = require("../configs/configs");
 
 const Login = ({ history }) => {
   const [formData, setFormData] = useState({
@@ -26,7 +31,7 @@ const Login = ({ history }) => {
       axios
         .post(`${API_URL}/login`, {
           email: email,
-          password: password
+          password: password,
         })
         .then((res) => {
           authenticate(res, () => {
@@ -55,29 +60,47 @@ const Login = ({ history }) => {
       toast.error("Please fill all fields");
     }
   };
-  const sendGoogleToken = tokenId => {
+  const sendGoogleToken = (tokenId) => {
     axios
       .post(`${API_URL}/googlelogin`, {
-        idToken: tokenId
+        idToken: tokenId,
       })
-      .then(res => {
+      .then((res) => {
         console.log(res.data);
         informParent(res);
       })
-      .catch(error => {
-       console.log('GOOGLE SIGNIN ERROR', error.response);
+      .catch((error) => {
+        console.log("GOOGLE SIGNIN ERROR", error.response);
       });
   };
-  const informParent = response => {
+  const sendFacebookToken = (userID, accessToken) => {
+    axios
+      .post(`${API_URL}/facebooklogin`, {
+        userID,
+        accessToken,
+      })
+      .then((res) => {
+       // console.log(res.data);
+        informParent(res);
+      })
+      .catch((error) => {
+       // console.log("FACEBOOK SIGNIN ERROR", error.response);
+      });
+  };
+  const informParent = (response) => {
     authenticate(response, () => {
-      isAuth() && isAuth().role === 'admin'
-        ? history.push('/admin')
-        : history.push('/private');
+      isAuth() && isAuth().role === "admin"
+        ? history.push("/admin")
+        : history.push("/private");
     });
   };
   const responseGoogle = (response) => {
-    console.log(response)
+   //console.log(response);
     sendGoogleToken(response.tokenId);
+  };
+  const responseFacebook = response => {
+    //console.log(response);
+    sendFacebookToken(response.userID, response.accessToken)
   };
   return (
     <div className="min-h-screen bg-gray-100 text-gray-900 flex justify-center">
@@ -91,24 +114,40 @@ const Login = ({ history }) => {
             </h1>
             <div className="w-full flex-1 mt-8 text-indigo-500">
               <div className="flex flex-col items-center">
-              <GoogleLogin
-                  clientId={CLIENT_ID}
+                <GoogleLogin
+                  clientId={GOOGLE_CLIENT_ID}
                   onSuccess={responseGoogle}
                   onFailure={responseGoogle}
-                  cookiePolicy={'single_host_origin'}
-                  render={renderProps => (
+                  cookiePolicy={"single_host_origin"}
+                  render={(renderProps) => (
                     <button
                       onClick={renderProps.onClick}
                       disabled={renderProps.disabled}
-                      className='w-full max-w-xs font-bold shadow-sm rounded-lg py-3 bg-indigo-100 text-gray-800 flex items-center justify-center transition-all duration-300 ease-in-out focus:outline-none hover:shadow focus:shadow-sm focus:shadow-outline'
+                      className="w-full max-w-xs font-bold shadow-sm rounded-lg py-3 bg-indigo-100 text-gray-800 flex items-center justify-center transition-all duration-300 ease-in-out focus:outline-none hover:shadow focus:shadow-sm focus:shadow-outline"
                     >
-                      <div className=' p-2 rounded-full '>
-                        <i className='fab fa-google ' />
+                      <div className=" p-2 rounded-full ">
+                        <i className="fab fa-google " />
                       </div>
-                      <span className='ml-4'>Sign In with Google</span>
+                      <span className="ml-4">Sign In with Google</span>
                     </button>
                   )}
                 ></GoogleLogin>
+                <FacebookLogin
+                  appId={`${FACEBOOK_CLIENT_ID}`}
+                  autoLoad={false}
+                  callback={responseFacebook}
+                  render={(renderProps) => (
+                    <button
+                      onClick={renderProps.onClick}
+                      className="w-full max-w-xs font-bold shadow-sm rounded-lg py-3 bg-indigo-100 text-gray-800 flex items-center justify-center transition-all duration-300 ease-in-out focus:outline-none hover:shadow focus:shadow-sm focus:shadow-outline mt-5"
+                    >
+                      <div className=" p-2 rounded-full ">
+                        <i className="fab fa-facebook" />
+                      </div>
+                      <span className="ml-4">Sign In with Facebook</span>
+                    </button>
+                  )}
+                />
                 <a
                   className="w-full max-w-xs font-bold shadow-sm rounded-lg py-3
            bg-indigo-100 text-gray-800 flex items-center justify-center transition-all duration-300 ease-in-out focus:outline-none hover:shadow focus:shadow-sm focus:shadow-outline mt-5"

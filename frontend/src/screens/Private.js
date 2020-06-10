@@ -4,7 +4,7 @@ import { ToastContainer, toast } from 'react-toastify';
 import axios from 'axios';
 import { updateUser, isAuth, getCookie, signout } from '../helpers/auth';
 
-const API_URL = require('../configs/configs');
+const {API_URL} = require('../configs/configs');
 
 const Private = ({ history }) => {
   const [formData, setFormData] = useState({
