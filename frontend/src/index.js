@@ -9,6 +9,9 @@ import Register from "./screens/Register";
 import Activate from "./screens/Activate";
 import ForgetPassword from "./screens/ForgotPassword";
 import ResetPassword from "./screens/ResetPassword";
+import Private from './screens/Private';
+
+import PrivateRoute from './Routes/PrivateRoute';
 
 ReactDOM.render(
   <BrowserRouter>
@@ -35,6 +38,7 @@ ReactDOM.render(
         exact
         render={(props) => <ResetPassword {...props} />}
       />
+      <PrivateRoute path="/private" exact component={Private} />
       <Redirect to="/" />
     </Switch>
   </BrowserRouter>,
