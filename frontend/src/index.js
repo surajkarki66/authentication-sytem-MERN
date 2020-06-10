@@ -6,6 +6,7 @@ import 'react-toastify/dist/ReactToastify.css';
 
 import Login from './screens/Login';
 import Register from './screens/Register';
+import Activate from './screens/Activate';
 
 ReactDOM.render(
   <BrowserRouter>
@@ -13,6 +14,7 @@ ReactDOM.render(
       <Route path='/' exact render={props => <App {...props} />} />
       <Route path='/login' exact render={props => <Login {...props} />} />
       <Route path='/register' exact render={props => <Register {...props} />} />
+      <Route path='/users/activate/:token' exact render={props => <Activate {...props} />} />
       <Redirect to='/' />
     </Switch>
   </BrowserRouter>,

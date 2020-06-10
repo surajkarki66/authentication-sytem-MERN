@@ -32,48 +32,59 @@ exports.registerController = (req, res) => {
           errors: "Email is taken",
         });
       }
-    });
-    // Converting payload to jsonwebtoken.
-    const token = jwt.sign(
-      {
-        name,
-        email,
-        password,
-      },
-      process.env.JWT_ACCOUNT_ACTIVATION,
-      {
-        expiresIn: "5m",
-      }
-    );
+      if (!user && !err) {
+        // Converting payload to jsonwebtoken.
+        const token = jwt.sign(
+          {
+            name,
+            email,
+            password,
+          },
+          process.env.JWT_ACCOUNT_ACTIVATION,
+          {
+            expiresIn: "5m",
+          }
+        );
 
-    let mailOptions = {
-      from: `"SurajKarki" ${process.env.USER}`,
-      to: email,
-      subject: "Account activation link",
-      body: "Thank you for choosing us !",
-      html: `
-      <h1>Please use the following to activate your account</h1>
-      <p>${process.env.CLIENT_URL}/users/activate/${token}</p>
-      <hr />
-      <p>This email may containe sensetive information</p>
-      <p>${process.env.CLIENT_URL}</p>
-  `,
-    };
-
-    // Sending email with defined transport object
-    transporter.sendMail(mailOptions, (error, info) => {
-      if (error) {
-        res.status(400).json({
-          success: false,
-          errors: errorHandler(error),
+        //Verifying the Nodemailer Transport instance
+        transporter.verify((error, success) => {
+          if (error) {
+            console.log(error);
+          } else {
+            console.log("Server is ready to take messages");
+          }
         });
-      } else {
-        res.status(200).json({
-          success: true,
-          message: `Email has been sent to ${email}`,
+        let mailOptions = {
+          from: `"SurajKarki" ${process.env.USER}`,
+          to: email,
+          subject: "Account activation link",
+          body: "Thank you for choosing us !",
+          html: `
+          <h1>Please use the following to activate your account</h1>
+          <p>${process.env.CLIENT_URL}/users/activate/${token}</p>
+          <hr />
+          <p>This email may containe sensetive information</p>
+          <p>${process.env.CLIENT_URL}</p>
+           `,
+        };
+        // Sending email with defined transport object
+        transporter.sendMail(mailOptions, (error, info) => {
+          if (error) {
+            res.status(400).json({
+              success: false,
+              errors: errorHandler(error),
+            });
+          } else {
+            res.status(200).json({
+              success: true,
+              message: `Email has been sent to ${email}`,
+            });
+          }
         });
       }
     });
+
+    
   }
 };
 
@@ -255,36 +266,36 @@ exports.resetPasswordController = (req, res) => {
   const errors = validationResult(req);
 
   if (!errors.isEmpty()) {
-    const firstError = errors.array().map(error => error.msg)[0];
+    const firstError = errors.array().map((error) => error.msg)[0];
     return res.status(422).json({
-      errors: firstError
+      errors: firstError,
     });
   } else {
     if (resetPasswordLink) {
-      jwt.verify(resetPasswordLink, process.env.JWT_RESET_PASSWORD, function(
+      jwt.verify(resetPasswordLink, process.env.JWT_RESET_PASSWORD, function (
         err,
         decoded
       ) {
         if (err) {
           return res.status(400).json({
-            error: 'Expired link. Try again'
+            error: "Expired link. Try again",
           });
         }
 
         User.findOne(
           {
-            resetPasswordLink
+            resetPasswordLink,
           },
           (err, user) => {
             if (err || !user) {
               return res.status(400).json({
-                error: 'Something went wrong. Try later'
+                error: "Something went wrong. Try later",
               });
             }
 
             const updatedFields = {
               password: newPassword,
-              resetPasswordLink: ''
+              resetPasswordLink: "",
             };
 
             user = _.extend(user, updatedFields);
@@ -292,11 +303,11 @@ exports.resetPasswordController = (req, res) => {
             user.save((err, result) => {
               if (err) {
                 return res.status(400).json({
-                  error: 'Error resetting user password'
+                  error: "Error resetting user password",
                 });
               }
               res.json({
-                message: `Great! Now you can login with your new password`
+                message: `Great! Now you can login with your new password`,
               });
             });
           }
@@ -306,108 +317,112 @@ exports.resetPasswordController = (req, res) => {
   }
 };
 
-const client = new OAuth2Client(process.env.CLIENT_ID, process.env.CLIENT_SECRET, process.env.REDIRECT_URL);
+const client = new OAuth2Client(
+  process.env.CLIENT_ID,
+  process.env.CLIENT_SECRET,
+  process.env.REDIRECT_URL
+);
 // Google Login
 exports.googleController = (req, res) => {
   const { idToken } = req.body;
   client
     .verifyIdToken({ idToken, audience: process.env.CLIENT_ID })
-    .then(response => {
+    .then((response) => {
       // console.log('GOOGLE LOGIN RESPONSE',response)
       const { email_verified, name, email } = response.payload;
       if (email_verified) {
         User.findOne({ email }).exec((err, user) => {
           if (user) {
             const token = jwt.sign({ _id: user._id }, process.env.JWT_SECRET, {
-              expiresIn: '7d'
+              expiresIn: "7d",
             });
             const { _id, email, name, role } = user;
             return res.json({
               token,
-              user: { _id, email, name, role }
+              user: { _id, email, name, role },
             });
           } else {
             let password = email + process.env.JWT_SECRET;
             user = new User({ name, email, password });
             user.save((err, data) => {
               if (err) {
-                console.log('ERROR GOOGLE LOGIN ON USER SAVE', err);
+                console.log("ERROR GOOGLE LOGIN ON USER SAVE", err);
                 return res.status(400).json({
-                  error: 'User signup failed with google'
+                  error: "User signup failed with google",
                 });
               }
               const token = jwt.sign(
                 { _id: data._id },
                 process.env.JWT_SECRET,
-                { expiresIn: '7d' }
+                { expiresIn: "7d" }
               );
               const { _id, email, name, role } = data;
               return res.json({
                 token,
-                user: { _id, email, name, role }
+                user: { _id, email, name, role },
               });
             });
           }
         });
       } else {
         return res.status(400).json({
-          error: 'Google login failed. Try again'
+          error: "Google login failed. Try again",
         });
       }
     });
 };
 
 exports.facebookController = (req, res) => {
-  console.log('FACEBOOK LOGIN REQ BODY', req.body);
+  console.log("FACEBOOK LOGIN REQ BODY", req.body);
   const { userID, accessToken } = req.body;
 
   const url = `https://graph.facebook.com/v2.11/${userID}/?fields=id,name,email&access_token=${accessToken}`;
 
   return (
     fetch(url, {
-      method: 'GET'
+      method: "GET",
     })
-      .then(response => response.json())
+      .then((response) => response.json())
       // .then(response => console.log(response))
-      .then(response => {
+      .then((response) => {
         const { email, name } = response;
         User.findOne({ email }).exec((err, user) => {
           if (user) {
             const token = jwt.sign({ _id: user._id }, process.env.JWT_SECRET, {
-              expiresIn: '7d'
+              expiresIn: "7d",
             });
             const { _id, email, name, role } = user;
             return res.json({
               token,
-              user: { _id, email, name, role }
+              user: { _id, email, name, role },
             });
           } else {
             let password = email + process.env.JWT_SECRET;
             user = new User({ name, email, password });
             user.save((err, data) => {
               if (err) {
-                console.log('ERROR FACEBOOK LOGIN ON USER SAVE', err);
+                console.log("ERROR FACEBOOK LOGIN ON USER SAVE", err);
                 return res.status(400).json({
-                  error: 'User signup failed with facebook'
+                  error: "User signup failed with facebook",
                 });
               }
               const token = jwt.sign(
                 { _id: data._id },
                 process.env.JWT_SECRET,
-                { expiresIn: '7d' }
+                { expiresIn: "7d" }
               );
               const { _id, email, name, role } = data;
               return res.json({
                 token,
-                user: { _id, email, name, role }
+                user: { _id, email, name, role },
               });
             });
           }
         });
       })
-      .catch(error => {
+      .catch((error) => {
         res.json({
-          error: 'Facebook login failed. Try later'
+          error: "Facebook login failed. Try later",
         });
       })
   );
