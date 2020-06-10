@@ -1,9 +1,9 @@
 import React from 'react';
 import { Link, Redirect } from 'react-router-dom';
-//import { signout } from './helpers/auth';
+import { signout } from './helpers/auth';
 import { ToastContainer, toast } from 'react-toastify';
 
-const app = (history) => {
+const app = ({history}) => {
   return (
     <div className='min-h-screen bg-gray-100 text-gray-900 flex justify-center'>
             <ToastContainer />
@@ -49,7 +49,6 @@ const app = (history) => {
                   <i className='fas fa-sign-in-alt  w-6  -ml-2' />
                   <span className='ml-3'>Admin Dashbaord</span>
                 </Link>
-                {/*
                 <button
                   onClick={() => {
                     signout(() => {
@@ -62,7 +61,6 @@ const app = (history) => {
                   <i className='fas fa-sign-out-alt  w-6  -ml-2' />
                   <span className='ml-3'>Signout</span>
                 </button>
-                */}
               </div>
             </div>
           </div>
