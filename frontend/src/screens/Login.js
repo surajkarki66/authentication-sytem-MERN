@@ -4,8 +4,9 @@ import { ToastContainer, toast } from "react-toastify";
 import axios from "axios";
 import { authenticate, isAuth } from "../helpers/auth";
 import { Link, Redirect } from "react-router-dom";
+import { GoogleLogin } from 'react-google-login';
 
-const API_URL = require("../configs/configs");
+const {API_URL, CLIENT_ID } = require("../configs/configs");
 
 const Login = ({ history }) => {
   const [formData, setFormData] = useState({
@@ -54,6 +55,30 @@ const Login = ({ history }) => {
       toast.error("Please fill all fields");
     }
   };
+  const sendGoogleToken = tokenId => {
+    axios
+      .post(`${API_URL}/googlelogin`, {
+        idToken: tokenId
+      })
+      .then(res => {
+        console.log(res.data);
+        informParent(res);
+      })
+      .catch(error => {
+       console.log('GOOGLE SIGNIN ERROR', error.response);
+      });
+  };
+  const informParent = response => {
+    authenticate(response, () => {
+      isAuth() && isAuth().role === 'admin'
+        ? history.push('/admin')
+        : history.push('/private');
+    });
+  };
+  const responseGoogle = (response) => {
+    console.log(response)
+    sendGoogleToken(response.tokenId);
+  };
   return (
     <div className="min-h-screen bg-gray-100 text-gray-900 flex justify-center">
       {isAuth() ? <Redirect to="/" /> : null}
@@ -66,6 +91,24 @@ const Login = ({ history }) => {
             </h1>
             <div className="w-full flex-1 mt-8 text-indigo-500">
               <div className="flex flex-col items-center">
+              <GoogleLogin
+                  clientId={CLIENT_ID}
+                  onSuccess={responseGoogle}
+                  onFailure={responseGoogle}
+                  cookiePolicy={'single_host_origin'}
+                  render={renderProps => (
+                    <button
+                      onClick={renderProps.onClick}
+                      disabled={renderProps.disabled}
+                      className='w-full max-w-xs font-bold shadow-sm rounded-lg py-3 bg-indigo-100 text-gray-800 flex items-center justify-center transition-all duration-300 ease-in-out focus:outline-none hover:shadow focus:shadow-sm focus:shadow-outline'
+                    >
+                      <div className=' p-2 rounded-full '>
+                        <i className='fab fa-google ' />
+                      </div>
+                      <span className='ml-4'>Sign In with Google</span>
+                    </button>
+                  )}
+                ></GoogleLogin>
                 <a
                   className="w-full max-w-xs font-bold shadow-sm rounded-lg py-3
            bg-indigo-100 text-gray-800 flex items-center justify-center transition-all duration-300 ease-in-out focus:outline-none hover:shadow focus:shadow-sm focus:shadow-outline mt-5"
