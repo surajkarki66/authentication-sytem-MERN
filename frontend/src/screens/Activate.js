@@ -22,9 +22,9 @@ const Activate = ({ match }) => {
     if (token) {
       setFormData({ ...formData, name, token });
     }
-
-  }, [match.params]);
-  const { name, token, show } = formData;
+      // eslint-disable-next-line 
+  }, []);
+  const { name, token } = formData;
 
   const handleSubmit = e => {
     e.preventDefault();

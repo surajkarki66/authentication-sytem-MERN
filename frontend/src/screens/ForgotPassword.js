@@ -10,7 +10,7 @@ const ForgetPassword = ({history}) => {
     email: '',
     textChange: 'Submit'
   });
-  const { email, textChange } = formData;
+  const { email } = formData;
   const handleChange = text => e => {
     setFormData({ ...formData, [text]: e.target.value });
   };

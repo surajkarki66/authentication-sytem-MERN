@@ -6,7 +6,7 @@ import { updateUser, isAuth, getCookie, signout } from '../helpers/auth';
 
 const API_URL = require('../configs/configs');
 
-const Private = ({ history }) => {
+const Admin = ({ history }) => {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -14,6 +14,11 @@ const Private = ({ history }) => {
     textChange: 'Update',
     role: ''
   });
+  useEffect(() => {
+    loadProfile();
+      // eslint-disable-next-line 
+  }, []);
+
   const loadProfile = () => {
     const token = getCookie('token');
     axios
@@ -35,11 +40,6 @@ const Private = ({ history }) => {
         }
       });
   };
-  useEffect(() => {
-    loadProfile();
-    // eslint-disable-next-line 
-  }, []);
-
   const { name, email, password1, textChange, role } = formData;
   const handleChange = text => e => {
     setFormData({ ...formData, [text]: e.target.value });
@@ -50,7 +50,7 @@ const Private = ({ history }) => {
     setFormData({ ...formData, textChange: 'Submitting' });
     axios
       .put(
-        `${API_URL}/user/update`,
+        `${API_URL}/admin/update`,
         {
           name: name,
           email: email,
@@ -65,7 +65,7 @@ const Private = ({ history }) => {
       .then(res => {
         updateUser(res, () => {
           toast.success('Profile Updated Successfully');
-          setFormData({ ...formData, textChange: 'Update' });
+          setFormData({ ...formData, textChange: 'Update' }); 
         });
       })
       .catch(err => {
@@ -80,7 +80,7 @@ const Private = ({ history }) => {
         <div className='lg:w-1/2 xl:w-5/12 p-6 sm:p-12'>
           <div className='mt-12 flex flex-col items-center'>
             <h1 className='text-2xl xl:text-3xl font-extrabold'>
-              Profile Update
+              Admin Update
             </h1>
 
             <form
@@ -156,4 +156,4 @@ const Private = ({ history }) => {
   );
 };
 
-export default Private;
+export default Admin;

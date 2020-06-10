@@ -9,9 +9,11 @@ import Register from "./screens/Register";
 import Activate from "./screens/Activate";
 import ForgetPassword from "./screens/ForgotPassword";
 import ResetPassword from "./screens/ResetPassword";
-import Private from './screens/Private';
+import Private from "./screens/Private";
+import Admin from "./screens/Admin";
 
-import PrivateRoute from './Routes/PrivateRoute';
+import PrivateRoute from "./Routes/PrivateRoute";
+import AdminRoute from "./Routes/AdminRoute";
 
 ReactDOM.render(
   <BrowserRouter>
@@ -39,6 +41,7 @@ ReactDOM.render(
         render={(props) => <ResetPassword {...props} />}
       />
       <PrivateRoute path="/private" exact component={Private} />
+      <AdminRoute path="/path" exact component={Admin} />
       <Redirect to="/" />
     </Switch>
   </BrowserRouter>,

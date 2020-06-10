@@ -12,14 +12,13 @@ const ResetPassword = ({match}) => {
       token: '',
       textChange: 'Submit'
   });
-    const { password1, password2, textChange, token } = formData;
-    
+    const { password1, password2, token } = formData;
     useEffect(() => {
         let token = match.params.token
         if(token) {
-            setFormData({...formData, token,})
+            setFormData(prev => ({...prev, token: token}))
         }
-        
+    // eslint-disable-next-line   
     }, [])
   const handleChange = text => e => {
     setFormData({ ...formData, [text]: e.target.value });

@@ -13,7 +13,7 @@ const Login = ({ history }) => {
     password: "",
     textChange: "Sign In",
   });
-  const { email, password, textChange } = formData;
+  const { email, password } = formData;
   const handleChange = (text) => (e) => {
     setFormData({ ...formData, [text]: e.target.value });
   };
