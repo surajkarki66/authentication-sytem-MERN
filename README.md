@@ -4,7 +4,7 @@ MERN Authentication, Login, Register, verification email, Facebook, Google, Forg
 Full Authentication  Login and Register with verification email and Facebook, Google Login with Forget and Reset Password using taliwind css
 
 
-### Here the processs to run an application locally:
+### Here the process to run an application locally:
 
    - To start frontend `React` on `Node` server:
      - `cd frontend`
